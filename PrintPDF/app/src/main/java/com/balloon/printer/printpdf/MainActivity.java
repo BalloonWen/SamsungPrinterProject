@@ -3,10 +3,12 @@ package com.balloon.printer.printpdf;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -19,9 +21,17 @@ import com.google.android.gms.drive.query.Query;
 import com.google.android.gms.drive.query.SortOrder;
 import com.google.android.gms.drive.query.SortableField;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
-    private  GoogleApiClient mGoogleApiClient;
+    private static final String SEND_MESSAGE_SERVLET = "http://192.168.139.128:8080/TestOAuthServer/servlet/PushMessageServlet";
+    private GoogleApiClient mGoogleApiClient;
     private ResultsAdapter mResultsAdapter;
     private ListView mResultsListView;
     private static final String TAG = "BaseDriveActivity";
@@ -45,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         mResultsListView = (ListView) findViewById(R.id.listViewResults);
         mResultsAdapter = new ResultsAdapter(this);
         mResultsListView.setAdapter(mResultsAdapter);
+
     }
 
     @Override
@@ -92,16 +103,68 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             Log.e(TAG, "Exception while starting resolution activity", e);
         }
     }
+
     final private ResultCallback<DriveApi.MetadataBufferResult> metadataCallback =
             new ResultCallback<DriveApi.MetadataBufferResult>() {
                 @Override
-                public void onResult(DriveApi.MetadataBufferResult result) {
+                public void onResult(final DriveApi.MetadataBufferResult result) {
                     if (!result.getStatus().isSuccess()) {
 
                         return;
                     }
                     mResultsAdapter.clear();
                     mResultsAdapter.append(result.getMetadataBuffer());
+
+                    mResultsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        @Override
+                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                            String filename = result.getMetadataBuffer().get(position).getTitle();
+                            Log.i(TAG, filename);
+                            new sendFilename2Server().execute(filename);
+                        }
+                    });
                 }
             };
+
+    private class sendFilename2Server extends AsyncTask<String, Void, String> {
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            try {
+                String filename = params[0];
+                URL url = new URL(SEND_MESSAGE_SERVLET);
+                HttpURLConnection httpConn = null;
+
+                httpConn = (HttpURLConnection) url.openConnection();
+
+                httpConn.setUseCaches(false);
+                httpConn.setDoOutput(true);
+                httpConn.setRequestMethod("POST");
+                httpConn.setDoInput(true);
+                httpConn.setRequestProperty("fileName", filename);
+
+                OutputStream outputStream = httpConn.getOutputStream();
+                outputStream.close();
+
+                int responseCode = httpConn.getResponseCode();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(httpConn.getInputStream()));
+                    String response = reader.readLine();
+                    String result = "Server's response: " + response;
+                    Log.i("response",response);
+
+                } else {
+                    System.out.println("Server returned non-OK code: " + responseCode);
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
 }
