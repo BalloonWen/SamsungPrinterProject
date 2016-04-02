@@ -17,6 +17,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.drive.Drive;
 import com.google.android.gms.drive.DriveApi;
+import com.google.android.gms.drive.DriveId;
 import com.google.android.gms.drive.query.Query;
 import com.google.android.gms.drive.query.SortOrder;
 import com.google.android.gms.drive.query.SortableField;
@@ -30,7 +31,7 @@ import java.net.URL;
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
-    private static final String SEND_MESSAGE_SERVLET = "http://192.168.139.128:8080/TestOAuthServer/servlet/PushMessageServlet";
+    private static final String SEND_MESSAGE_SERVLET = "http://135.23.64.27:8080/TestOAuthServer/servlet/PushMessageServlet";
     private GoogleApiClient mGoogleApiClient;
     private ResultsAdapter mResultsAdapter;
     private ListView mResultsListView;
@@ -119,8 +120,12 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                         @Override
                         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                             String filename = result.getMetadataBuffer().get(position).getTitle();
+                            DriveId driveID = result.getMetadataBuffer().get(position).getDriveId();
+                            String fileId = driveID.encodeToString();
                             Log.i(TAG, filename);
-                            new sendFilename2Server().execute(filename);
+                            Log.i(TAG, fileId);
+//                            new sendFilename2Server().execute(filename);
+                            new sendFilename2Server().execute(filename,fileId);
                         }
                     });
                 }
@@ -135,7 +140,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         @Override
         protected String doInBackground(String... params) {
             try {
-                String filename = params[0];
+                String filename1 = params[0];
+                String driveId1 = params[1];
                 URL url = new URL(SEND_MESSAGE_SERVLET);
                 HttpURLConnection httpConn = null;
 
@@ -145,7 +151,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 httpConn.setDoOutput(true);
                 httpConn.setRequestMethod("POST");
                 httpConn.setDoInput(true);
-                httpConn.setRequestProperty("fileName", filename);
+                httpConn.setRequestProperty("fileName", filename1);
+                httpConn.setRequestProperty("driveId", driveId1);
 
                 OutputStream outputStream = httpConn.getOutputStream();
                 outputStream.close();
@@ -155,7 +162,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     BufferedReader reader = new BufferedReader(new InputStreamReader(httpConn.getInputStream()));
                     String response = reader.readLine();
                     String result = "Server's response: " + response;
-                    Log.i("response",response);
+                    Log.i("response",result);
 
                 } else {
                     System.out.println("Server returned non-OK code: " + responseCode);
