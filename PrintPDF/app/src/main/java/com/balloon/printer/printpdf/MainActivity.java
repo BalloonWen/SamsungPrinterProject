@@ -22,6 +22,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.drive.Drive;
 import com.google.android.gms.drive.DriveApi;
 import com.google.android.gms.drive.DriveContents;
@@ -49,13 +50,17 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private static final String TAG = "PrintPDF";
     private static final String SEND_MESSAGE_SERVLET = "http://135.23.64.27:8080/TestOAuthServer/servlet/PushMessageServlet";
     private static final int REQUEST_CODE_OPENER = 1;
-    protected static final int REQUEST_CODE_RESOLUTION = 1;
+    private static final int REQUEST_CODE_RESOLUTION = 2;
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
-    public static String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + "/";
+    private static final int STATE_LOG_OUT = 1;
+    private static final int STATE_LOG_IN = 2;
+    private static final int STATE_FILE_CHOSEN = 3;
+    private static String[] MIME_TYPES_FILTER = {"text/plain", "text/html"};
+    private static String FILE_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + "/";
     //global variables
     private GoogleApiClient mGoogleApiClient;
     private String driveIdString;
@@ -66,7 +71,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     Button btnPrint;
     Button btnDownload;
     Button btnOpen;
-
+    Button btnSignOut;
+    TextView txtFileInfo;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -82,18 +88,18 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     .build();
         }
 
+
         //register widgets
         btnSignIn = (Button) findViewById(R.id.btnSignIn);
         btnChooseFile = (Button) findViewById(R.id.btnChooseFile);
         btnDownload = (Button) findViewById(R.id.btnDownload);
         btnOpen = (Button) findViewById(R.id.btnOpen);
         btnPrint = (Button) findViewById(R.id.btnPrint);
+        btnSignOut = (Button) findViewById(R.id.btnSignOut);
+        txtFileInfo = (TextView) findViewById(R.id.txtFileInfo);
+        //set UI
+        UpdateUI(STATE_LOG_OUT);
 
-        //set Attributes
-        btnChooseFile.setVisibility(View.INVISIBLE);
-        btnDownload.setVisibility(View.INVISIBLE);
-        btnPrint.setVisibility(View.INVISIBLE);
-        btnOpen.setVisibility(View.INVISIBLE);
         //add Listeners
         btnSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -118,26 +124,32 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             @Override
             public void onClick(View v) {
                 if (file2Print != null)
-                new DownloadFromGD().execute(file2Print);
+                    new DownloadFromGD().execute(file2Print);
             }
         });
         btnOpen.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(file2Print!=null){
+                if (file2Print != null) {
                     new DownloadFromGD().execute(file2Print);
                     Intent intent = new Intent();
                     intent.setAction(android.content.Intent.ACTION_VIEW);
-                    File file = new File(filePath + file2Print.getFilename());
-                                            while (true) {
-                                                if (file.exists()) {
-                                                    break;
-                                                }
-                                            }
+                    File file = new File(FILE_PATH + file2Print.getFilename());
+//                                            while (true) {
+//                                                if (file.exists()) {
+//                                                    break;
+//                                                }
+//                                            }
                     intent.setDataAndType(Uri.fromFile(file), file2Print.getMimeType());
                     startActivity(intent);
                 }
 
+            }
+        });
+        btnSignOut.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                logOut();
             }
         });
     }
@@ -145,29 +157,28 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     @Override
     protected void onResume() {
         super.onResume();
-        if (file2Print != null) {
-            TextView txtFileInfo = (TextView) findViewById(R.id.txtFileInfo);
+        if(mGoogleApiClient.isConnected()&&file2Print==null){
+            UpdateUI(STATE_LOG_IN);
+        }
+        if (file2Print != null&&mGoogleApiClient.isConnected()) {
+            UpdateUI(STATE_FILE_CHOSEN);
             txtFileInfo.setText("");
             txtFileInfo.append("The file you choose is : " + file2Print.getFilename());
-            btnOpen.setVisibility(View.VISIBLE);
-            btnDownload.setVisibility(View.VISIBLE);
-            btnPrint.setVisibility(View.VISIBLE);
+
         }
     }
 
     @Override
     public void onConnected(Bundle bundle) {
-        //if login success, invisible the login button
-        btnSignIn.setVisibility(View.INVISIBLE);
-        //show choose file button
-        btnChooseFile.setVisibility(View.VISIBLE);
+        //update UI
+        UpdateUI(STATE_LOG_IN);
 
     }
 
     public void callDriveUI() {
         IntentSender intentSender = Drive.DriveApi
                 .newOpenFileActivityBuilder()
-                .setMimeType(new String[]{"text/plain", "text/html"})
+                .setMimeType(MIME_TYPES_FILTER)
                 .build(mGoogleApiClient);
         try {
             startIntentSenderForResult(
@@ -189,6 +200,52 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     REQUEST_EXTERNAL_STORAGE
             );
         }
+    }
+
+    public void logOut() {
+
+        mGoogleApiClient.clearDefaultAccountAndReconnect().setResultCallback(new ResultCallback<Status>() {
+            @Override
+            public void onResult(Status status) {
+                if (status.isSuccess()) {
+                    file2Print=null;
+                    UpdateUI(STATE_LOG_OUT);
+                }
+            }
+        });
+
+    }
+
+    public void UpdateUI(int stateCode){
+        switch (stateCode){
+            case STATE_LOG_OUT:
+                btnChooseFile.setVisibility(View.INVISIBLE);
+                btnDownload.setVisibility(View.INVISIBLE);
+                btnPrint.setVisibility(View.INVISIBLE);
+                btnOpen.setVisibility(View.INVISIBLE);
+                btnSignOut.setVisibility(View.INVISIBLE);
+                btnSignIn.setVisibility(View.VISIBLE);
+                txtFileInfo.setVisibility(View.INVISIBLE);
+                break;
+            case STATE_LOG_IN:
+                btnChooseFile.setVisibility(View.VISIBLE);
+                btnDownload.setVisibility(View.INVISIBLE);
+                btnPrint.setVisibility(View.INVISIBLE);
+                btnOpen.setVisibility(View.INVISIBLE);
+                btnSignOut.setVisibility(View.VISIBLE);
+                btnSignIn.setVisibility(View.INVISIBLE);
+                txtFileInfo.setVisibility(View.INVISIBLE);
+                break;
+            case STATE_FILE_CHOSEN:
+                btnChooseFile.setVisibility(View.VISIBLE);
+                btnDownload.setVisibility(View.VISIBLE);
+                btnPrint.setVisibility(View.VISIBLE);
+                btnOpen.setVisibility(View.VISIBLE);
+                btnSignOut.setVisibility(View.VISIBLE);
+                btnSignIn.setVisibility(View.INVISIBLE);
+                txtFileInfo.setVisibility(View.VISIBLE);
+        }
+
     }
 
     @Override
@@ -228,6 +285,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     }
                 }
                 return;
+            case REQUEST_CODE_RESOLUTION:
+                if (resultCode == RESULT_OK) {
+                    return;
+                }
+                break;
             default:
                 super.onActivityResult(requestCode, resultCode, data);
         }
@@ -329,7 +391,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                         DriveContents contents = result.getDriveContents();
                         InputStream inputStream = contents.getInputStream();
                         verifyStoragePermissions(MainActivity.this);
-                        File file = new File(filePath + fileName);
+                        File file = new File(FILE_PATH + fileName);
                         FileOutputStream fileOut = null;
                         fileOut = new FileOutputStream(file);
 

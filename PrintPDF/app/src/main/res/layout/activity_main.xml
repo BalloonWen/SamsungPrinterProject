@@ -69,5 +69,13 @@
             android:id="@+id/btnDownload"
             android:layout_alignTop="@+id/btnPrint"
             android:layout_toStartOf="@+id/btnChooseFile"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sign Out"
+            android:id="@+id/btnSignOut"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"/>
     </RelativeLayout>
 </LinearLayout>
