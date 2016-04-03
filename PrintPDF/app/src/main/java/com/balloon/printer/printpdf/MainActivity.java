@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private static final int STATE_LOG_OUT = 1;
     private static final int STATE_LOG_IN = 2;
     private static final int STATE_FILE_CHOSEN = 3;
-    private static String[] MIME_TYPES_FILTER = {"text/plain", "text/html"};
+    private static String[] MIME_TYPES_FILTER = {"image/jpeg","image/png", "application/pdf","text/plain", "text/html"};
     private static String FILE_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + "/";
     //global variables
     private GoogleApiClient mGoogleApiClient;
