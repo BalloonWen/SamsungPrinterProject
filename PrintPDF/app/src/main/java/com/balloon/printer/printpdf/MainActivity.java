@@ -212,6 +212,15 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }return true;
     }
 
+        public static String getMimeType(String url) {
+        String type = null;
+        String extension = MimeTypeMap.getFileExtensionFromUrl(url);
+        if (extension != null) {
+            type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+        }
+        return type;
+    }
+    
     public void logOut() {
 
         mGoogleApiClient.clearDefaultAccountAndReconnect().setResultCallback(new ResultCallback<Status>() {
