@@ -13,11 +13,13 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.balloon.printer.printpdf.bean.File2Print;
+import com.balloon.printer.printpdf.bean.PrintJob;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -59,20 +61,22 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private static final int STATE_LOG_OUT = 1;
     private static final int STATE_LOG_IN = 2;
     private static final int STATE_FILE_CHOSEN = 3;
-    private static String[] MIME_TYPES_FILTER = {"image/jpeg","image/png", "application/pdf","text/plain", "text/html"};
+    private static String[] MIME_TYPES_FILTER = {"image/jpeg", "image/png", "application/pdf", "text/plain", "text/html"};
     private static String FILE_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + "/";
     //global variables
     private GoogleApiClient mGoogleApiClient;
     private String driveIdString;
     File2Print file2Print;
     //widgets
-    Button btnSignIn;
-    Button btnChooseFile;
-    Button btnPrint;
-    Button btnDownload;
-    Button btnOpen;
-    Button btnSignOut;
+    ImageButton btnSignIn;
+    ImageButton btnChooseFile;
+    ImageButton btnPrint;
+    ImageButton btnDownload;
+    ImageButton btnOpen;
+    ImageButton btnSignOut;
     TextView txtFileInfo;
+    ImageView logo;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,13 +94,15 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
 
         //register widgets
-        btnSignIn = (Button) findViewById(R.id.btnSignIn);
-        btnChooseFile = (Button) findViewById(R.id.btnChooseFile);
-        btnDownload = (Button) findViewById(R.id.btnDownload);
-        btnOpen = (Button) findViewById(R.id.btnOpen);
-        btnPrint = (Button) findViewById(R.id.btnPrint);
-        btnSignOut = (Button) findViewById(R.id.btnSignOut);
+        btnSignIn = (ImageButton) findViewById(R.id.btnSignIn);
+        btnChooseFile = (ImageButton) findViewById(R.id.btnChooseFile);
+        btnDownload = (ImageButton) findViewById(R.id.btnDownload);
+        btnOpen = (ImageButton) findViewById(R.id.btnOpen);
+        btnPrint = (ImageButton) findViewById(R.id.btnPrint);
+        btnSignOut = (ImageButton) findViewById(R.id.btnLogout);
         txtFileInfo = (TextView) findViewById(R.id.txtFileInfo);
+        logo = (ImageView) findViewById(R.id.imgViewLogo);
+
         //set UI
         UpdateUI(STATE_LOG_OUT);
 
@@ -116,8 +122,12 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         btnPrint.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (file2Print != null)
+                if (file2Print != null) {
+                    PrintJob printJob = new PrintJob();
+                    printJob.setFile2Print(file2Print);
                     new SendFilename2Server().execute(file2Print);
+                }
+
             }
         });
         btnDownload.setOnClickListener(new View.OnClickListener() {
@@ -157,10 +167,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     @Override
     protected void onResume() {
         super.onResume();
-        if(mGoogleApiClient.isConnected()&&file2Print==null){
+        if (mGoogleApiClient.isConnected() && file2Print == null) {
             UpdateUI(STATE_LOG_IN);
         }
-        if (file2Print != null&&mGoogleApiClient.isConnected()) {
+        if (file2Print != null && mGoogleApiClient.isConnected()) {
             UpdateUI(STATE_FILE_CHOSEN);
             txtFileInfo.setText("");
             txtFileInfo.append("The file you choose is : " + file2Print.getFilename());
@@ -188,7 +198,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
     }
 
-    public static void verifyStoragePermissions(Activity activity) {
+    public static boolean verifyStoragePermissions(Activity activity) {
         // Check if we have write permission
         int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
@@ -199,7 +209,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     PERMISSIONS_STORAGE,
                     REQUEST_EXTERNAL_STORAGE
             );
-        }
+        }return true;
     }
 
     public void logOut() {
@@ -208,7 +218,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             @Override
             public void onResult(Status status) {
                 if (status.isSuccess()) {
-                    file2Print=null;
+                    file2Print = null;
                     UpdateUI(STATE_LOG_OUT);
                 }
             }
@@ -216,8 +226,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     }
 
-    public void UpdateUI(int stateCode){
-        switch (stateCode){
+
+    public void UpdateUI(int stateCode) {
+        switch (stateCode) {
             case STATE_LOG_OUT:
                 btnChooseFile.setVisibility(View.INVISIBLE);
                 btnDownload.setVisibility(View.INVISIBLE);
@@ -226,6 +237,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 btnSignOut.setVisibility(View.INVISIBLE);
                 btnSignIn.setVisibility(View.VISIBLE);
                 txtFileInfo.setVisibility(View.INVISIBLE);
+                logo.setVisibility(View.VISIBLE);
                 break;
             case STATE_LOG_IN:
                 btnChooseFile.setVisibility(View.VISIBLE);
@@ -235,6 +247,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 btnSignOut.setVisibility(View.VISIBLE);
                 btnSignIn.setVisibility(View.INVISIBLE);
                 txtFileInfo.setVisibility(View.INVISIBLE);
+                logo.setVisibility(View.INVISIBLE);
                 break;
             case STATE_FILE_CHOSEN:
                 btnChooseFile.setVisibility(View.VISIBLE);
@@ -244,6 +257,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 btnSignOut.setVisibility(View.VISIBLE);
                 btnSignIn.setVisibility(View.INVISIBLE);
                 txtFileInfo.setVisibility(View.VISIBLE);
+                logo.setVisibility(View.INVISIBLE);
         }
 
     }
@@ -332,8 +346,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 String fileName = params[0].getFilename();
                 String driveId = params[0].getDriveId();
                 URL url = new URL(SEND_MESSAGE_SERVLET);
-                HttpURLConnection httpConn = null;
-                httpConn = (HttpURLConnection) url.openConnection();
+                HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
 
                 httpConn.setUseCaches(false);
                 httpConn.setDoOutput(true);
@@ -365,8 +378,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
-            Toast.makeText(MainActivity.this, "Sent Information to Server...", Toast.LENGTH_LONG);
-            Toast.makeText(MainActivity.this, s, Toast.LENGTH_LONG);
+            Toast.makeText(MainActivity.this, "Sent Information to Server...", Toast.LENGTH_LONG).show();
+            Toast.makeText(MainActivity.this, s, Toast.LENGTH_LONG).show();
         }
     }
 
@@ -390,7 +403,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
                         DriveContents contents = result.getDriveContents();
                         InputStream inputStream = contents.getInputStream();
-                        verifyStoragePermissions(MainActivity.this);
+                        if(verifyStoragePermissions(MainActivity.this));
                         File file = new File(FILE_PATH + fileName);
                         FileOutputStream fileOut = null;
                         fileOut = new FileOutputStream(file);

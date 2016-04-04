@@ -3,15 +3,13 @@ package com.balloon.printer.printpdf.bean;
 /**
  * Created by whenb on 4/3/2016.
  */
-public class PrintJob extends File2Print {
+public class PrintJob  {
 
     private String printerAddress;
+    private String deviceAddress;
+    private File2Print file2Print;
 
     public PrintJob() {}
-
-    public PrintJob(String driveId, String filename, String mimeType, double fileSize) {
-        super(driveId, filename, fileSize, mimeType);
-    }
 
     public String getPrinterAddress() {
         return printerAddress;
@@ -22,4 +20,19 @@ public class PrintJob extends File2Print {
     }
 
 
+    public String getDeviceAddress() {
+        return deviceAddress;
+    }
+
+    public void setDeviceAddress(String deviceAddress) {
+        this.deviceAddress = deviceAddress;
+    }
+
+    public File2Print getFile2Print() {
+        return file2Print;
+    }
+
+    public void setFile2Print(File2Print file2Print) {
+        this.file2Print = file2Print;
+    }
 }

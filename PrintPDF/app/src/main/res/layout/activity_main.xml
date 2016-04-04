@@ -8,9 +8,9 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
+    android:background="#1582d6"
     tools:context="com.balloon.printer.printpdf.MainActivity"
-    android:weightSum="1"
-    android:orientation="vertical">
+    android:weightSum="1">
 
 
     <RelativeLayout
@@ -18,23 +18,51 @@
         android:layout_height="match_parent"
         android:layout_gravity="center_horizontal">
 
-        <Button
+        <ImageButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Sign In"
-            android:id="@+id/btnSignIn"
-            android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true"
-            android:layout_marginBottom="61dp"/>
+            android:id="@+id/btnOpen"
+            android:background="@drawable/btnopen"
+            android:layout_marginTop="85dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignStart="@+id/btnDownload" />
 
-        <Button
+        <ImageButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Choose File"
+            android:id="@+id/btnDownload"
+            android:background="@drawable/btndownload"
+            android:layout_marginBottom="99dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="54dp" />
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/btnPrint"
+            android:background="@drawable/btnprint"
+            android:layout_alignTop="@+id/btnOpen"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="47dp" />
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/btnLogout"
+            android:background="@drawable/btnlogout"
+            android:layout_alignBottom="@+id/btnDownload"
+            android:layout_alignStart="@+id/btnPrint" />
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:id="@+id/btnChooseFile"
-            android:layout_above="@+id/btnSignIn"
-            android:layout_centerHorizontal="true"
-            android:layout_marginBottom="29dp"/>
+            android:background="@drawable/btnchoosefile"
+            android:adjustViewBounds="true"
+            android:maxHeight="64dp"
+            android:maxWidth="64dp"
+            android:scaleType="fitCenter"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"/>
 
         <TextView
             android:layout_width="wrap_content"
@@ -42,40 +70,25 @@
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:id="@+id/txtFileInfo"
             android:layout_alignParentTop="true"
-            android:layout_alignParentStart="true"
-            android:layout_marginTop="48dp"/>
-
-        <Button
+            android:layout_centerHorizontal="true"/>
+        <ImageButton
+            android:background="@drawable/image_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Print"
-            android:id="@+id/btnPrint"
-            android:layout_above="@+id/btnChooseFile"
-            android:layout_alignStart="@+id/btnSignIn"
-            android:layout_marginBottom="97dp"/>
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Open"
-            android:id="@+id/btnOpen"
-            android:layout_alignTop="@+id/btnPrint"
-            android:layout_toEndOf="@+id/btnChooseFile"/>
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Download"
-            android:id="@+id/btnDownload"
-            android:layout_alignTop="@+id/btnPrint"
-            android:layout_toStartOf="@+id/btnChooseFile"/>
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Sign Out"
-            android:id="@+id/btnSignOut"
+            android:id="@+id/btnSignIn"
+            android:layout_marginBottom="58dp"
+            android:layout_marginLeft="@dimen/activity_horizontal_margin"
             android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"/>
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/imgViewLogo"
+            android:src="@drawable/samsunglogo"
+            android:layout_marginTop="64dp"
+            android:layout_marginLeft="@dimen/activity_horizontal_margin"
+            android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"/>
     </RelativeLayout>
 </LinearLayout>
