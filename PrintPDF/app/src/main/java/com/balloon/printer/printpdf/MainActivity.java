@@ -50,8 +50,11 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     //constants
     private static final String TAG = "PrintPDF";
-    private static final String SEND_MESSAGE_SERVLET = "http://135.23.64.27:8080/TestOAuthServer/servlet/PushMessageServlet";
+//    private static final String SEND_MESSAGE_SERVLET = "http://192.168.139.128:8080/TestOAuthServer/servlet/PushMessageServlet";
+//    private static final String SEND_MESSAGE_SERVLET = "http://135.23.64.27:8080/TestOAuthServer/servlet/PushMessageServlet";
+private static final String SEND_MESSAGE_SERVLET = "http://samprinter.cloudapp.net/TestOAuthServer/servlet/PushMessageServlet";
     private static final int REQUEST_CODE_OPENER = 1;
+
     private static final int REQUEST_CODE_RESOLUTION = 2;
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
@@ -332,8 +335,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             File2Print file2Print = new File2Print();
             if (metadataResult != null && metadataResult.getStatus().isSuccess()) {
                 Metadata metadata = metadataResult.getMetadata();
+//                String link1 = metadata.getWebContentLink();
+//                String link2 = metadata.getWebViewLink();
+//                String desc = metadata.getDescription();
+                DriveId driveIdTest = metadata.getDriveId();
+                String resourceId =driveIdTest.getResourceId();
 
                 file2Print.setDriveId(driveId);
+                file2Print.setResourceId(resourceId);
                 file2Print.setFilename(metadata.getTitle());
                 file2Print.setMimeType(metadata.getMimeType());
                 file2Print.setFileSize(metadata.getFileSize());
@@ -354,6 +363,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             try {
                 String fileName = params[0].getFilename();
                 String driveId = params[0].getDriveId();
+                String resourceId = params[0].getResourceId();
                 URL url = new URL(SEND_MESSAGE_SERVLET);
                 HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
 
@@ -363,6 +373,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 httpConn.setDoInput(true);
                 httpConn.setRequestProperty("fileName", fileName);
                 httpConn.setRequestProperty("driveId", driveId);
+                httpConn.setRequestProperty("resourceId",resourceId);
 
                 OutputStream outputStream = httpConn.getOutputStream();
                 outputStream.close();
